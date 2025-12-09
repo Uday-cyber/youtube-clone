@@ -1,0 +1,17 @@
+{
+  "name": "youtube-clone",
+  "version": "1.0.0",
+  "description": "YouTube backend training",
+  "keywords": [
+    "javascript",
+    "backend",
+    "node"
+  ],
+  "license": "ISC",
+  "author": "Uday",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
