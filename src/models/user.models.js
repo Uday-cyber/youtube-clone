@@ -12,19 +12,23 @@ const userSchema = new mongoose.Schema(
     ],
     username: { 
         type: String, 
-        required: [true, "username is required"], 
+        required: true, 
         unique: true, 
-        index: true 
+        index: true,
+        trim: true,
+        minLength: 4
     },
     email: { 
         type: String, 
-        required: [true, "email is required"], 
+        required: true,
         unique: true, 
-        lowercase: true 
+        lowercase: true,
+        trim: true, 
     },
     fullName: { 
         type: String, 
-        required: [true, "email is required"] 
+        required: true,
+        trim: true 
     },
     avatar: { 
         type: String // Cloudinary Url
@@ -34,8 +38,9 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "password is required"],
-      min: [8, "Minimum 8 characters are required"],
+      required: true,
+      min: 8,
+      select: false
     },
     refreshToken: { 
         type: String 
@@ -47,7 +52,7 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next();
 
-   this.password = bcrypt.hash(this.password, 10);
+   this.password = await bcrypt.hash(this.password, 10);
    next(); 
 });
 userSchema.methods.isPasswordCorrect = async function(password) {

@@ -19,5 +19,9 @@ import userRouter from './routes/user.routes.js';
 
 app.use("/api/v1/user", userRouter); //Standard Practice u have to declare the api/version if you are creating API
 
+//Error Middleware
+import errorMiddleware from "../src/middlewares/error.middlewares.js";
+
+app.use(errorMiddleware);
 
 export default app;
