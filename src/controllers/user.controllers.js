@@ -17,6 +17,7 @@ export const registerUser = asyncHanlder( async (req, res) => {
     // return respose
 
     const { username, email, fullName, password } = req.body;
+    // console.log("Request Body: ", req.body);
 
     const existingUser = await User.findOne({
         $or: [{ username }, { email }]
@@ -27,8 +28,15 @@ export const registerUser = asyncHanlder( async (req, res) => {
     const avatarLocalPath = req.files?.avatar[0]?.path;
     // console.log("Avatar Path: ", avatarLocalPath);
 
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
     // console.log("Cover Image Path: ", coverImageLocalPath);
+    // console.log("Request File Path: ", req.files);
+    
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
+
     if(!avatarLocalPath) throw new ApiError(400, "Avatar image is required");
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
@@ -39,7 +47,7 @@ export const registerUser = asyncHanlder( async (req, res) => {
     const newUser = await User.create({
         fullName,
         avatar: avatar.url,
-        coverImage: coverImage.url?.url || "",
+        coverImage: coverImage?.url || "",
         email,
         password,
         username: username.toLowerCase()
