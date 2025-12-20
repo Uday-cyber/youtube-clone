@@ -22,6 +22,27 @@ const generateTokens = async (userId) => {
   }
 };
 
+const deleteFromCloudinaryAndRollBack = async (user, avatarLocalPath) => {
+    let newAvatar;
+    try {
+        newAvatar = await uploadOnCloudinary(avatarLocalPath);s
+        if(!newAvatar) throw new ApiError(400, "Error while uploading the new avatar on cloud");
+
+        const oldAvatar = await deleteFromCloudinary(user.avatar.public_id);
+        if(oldAvatar?.result !== "ok") throw new ApiError(500, "Error while deleting the old avatar from cloud");
+
+        return {
+            url: newAvatar.secure_url,
+            public_id: newAvatar.public_id
+        };
+    } catch (error) {
+        if (newAvatar?.public_id) {
+            await deleteFromCloudinary(newAvatar.public_id);
+        }
+        throw error;
+    }
+}
+
 export const registerUser = asyncHanlder(async (req, res) => {
   // get User details from frontend
   // validation in different file we just import it
@@ -192,7 +213,10 @@ export const changeCurrentPassword = asyncHanlder(async (req, res) => {
 });
 
 export const getCurrentUser = asyncHanlder(async (req, res) => {
-    return res.status(200, req.user, "Current user fetched successfully");
+    return res.status(200). 
+    json(
+        new ApiResponse( 200, req.user, "Current user fetched successfully")
+    )
 });
 
 export const updateAccountDetails = asyncHanlder(async (req, res) => {
@@ -218,16 +242,23 @@ export const updateUserAvatar = asyncHanlder(async (req, res) => {
     const avatarLocalPath = req.file?.path;
     if(!avatarLocalPath) throw new ApiError(400, "Avatar file is missing");
 
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-    if(!avatar.url) throw new ApiError(400, "Error while uploading Avatar");
+    // const avatar = await uploadOnCloudinary(avatarLocalPath);
+    // if(!avatar.url) throw new ApiError(400, "Error while uploading Avatar");
 
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set: { avatar: avatar.url }
-        },
-        { new: true }
-    ).select("-password")
+    // const user = await User.findByIdAndUpdate(
+    //     req.user?._id,
+    //     {
+    //         $set: { avatar: avatar.url }
+    //     },
+    //     { new: true }
+    // ).select("-password")
+
+    const user = await User.findById(req.user?._id);
+
+    const avatar = await deleteFromCloudinaryAndRollBack(user, avatarLocalPath);
+
+    user.avatar = avatar;
+    await user.save({ validateBeforeSave: false});
 
     return res.status(200)
     .json(

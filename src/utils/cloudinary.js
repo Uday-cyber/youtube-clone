@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import ApiError from "./ApiError.js";
 
 cloudinary.config(
     {
@@ -25,4 +26,16 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-export default uploadOnCloudinary;
+const deleteFromCloudinary = async (public_id) => {
+    try {
+        if(!public_id) throw new ApiError(400, "Could not find public id to delete from cloudinary");
+    
+        const respose = await cloudinary.uploader.destroy(public_id, { resource_type: "auto", invalidate:true });
+    
+        return respose;
+    } catch (error) {
+        throw new ApiError(500, {}, "Unable to delete from cloudinary");
+    }
+}
+
+export default {uploadOnCloudinary, deleteFromCloudinary};
