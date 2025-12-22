@@ -10,7 +10,7 @@ cloudinary.config(
     }
 );
 
-const uploadOnCloudinary = async (localFilePath) => {
+export const uploadOnCloudinary = async (localFilePath) => {
     try {
         if(!localFilePath) return console.log('Could not find the file path');
         
@@ -26,16 +26,14 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-const deleteFromCloudinary = async (public_id) => {
+export const deleteFromCloudinary = async (public_id) => {
     try {
         if(!public_id) throw new ApiError(400, "Could not find public id to delete from cloudinary");
     
-        const respose = await cloudinary.uploader.destroy(public_id, { resource_type: "auto", invalidate:true });
-    
-        return respose;
+        const response = await cloudinary.uploader.destroy(public_id, { resource_type: "image", invalidate:true });    
+
+        return response;
     } catch (error) {
-        throw new ApiError(500, {}, "Unable to delete from cloudinary");
+        throw error;
     }
 }
-
-export default {uploadOnCloudinary, deleteFromCloudinary};

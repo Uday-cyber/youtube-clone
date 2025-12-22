@@ -31,10 +31,12 @@ const userSchema = new mongoose.Schema(
         trim: true 
     },
     avatar: { 
-        type: String // Cloudinary Url
+        url: { type: String },
+        public_id: { type: String } // Cloudinary Url
     },
     coverImage: { 
-        type: String // Cloudinary Url
+        url: { type: String },
+        public_id: { type: String } // Cloudinary Url
     },
     password: {
       type: String,
