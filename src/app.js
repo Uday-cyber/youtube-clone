@@ -17,9 +17,11 @@ app.use(cookieParser());
 //Routes
 import userRouter from './routes/user.routes.js';
 import commentRouter from './routes/comment.routes.js';
+import likeRouter from './routes/like.routes.js';
 
 app.use("/api/v1/user", userRouter); //Standard Practice u have to declare the api/version if you are creating API
-app.use("/api/v1", commentRouter); 
+app.use("/api/v1/videos", commentRouter); 
+app.use("/api/v1/likes", likeRouter); 
 
 //Error Middleware
 import errorMiddleware from "../src/middlewares/error.middlewares.js";
