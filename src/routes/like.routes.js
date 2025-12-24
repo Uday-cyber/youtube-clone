@@ -1,6 +1,6 @@
 import express from "express";
 
-import verifyJWT from "../middlewares/auth.middlewares.js";
+import { verifyJWT } from "../middlewares/auth.middlewares.js";
 import { getLikedVideos, toggleCommentLike, toggleTweetLike, toggleVideoLike } from "../controllers/like.controllers.js";
 
 const likeRouter = express.Router();
