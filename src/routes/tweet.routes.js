@@ -17,13 +17,11 @@ tweetRouter.route("/user/:userId")
     getUserTweet
 );
 
-tweetRouter.route("/:tweetId")
+tweetRouter.route("/tweet/:tweetId")
 .patch(
     verifyJWT,
     updateTweet
-);
-
-tweetRouter.route("/:tweetId")
+)
 .delete(
     verifyJWT,
     deleteTweet
