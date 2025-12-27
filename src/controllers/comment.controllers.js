@@ -22,7 +22,7 @@ export const getVideoComments = asyncHandler(async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    const userId = await mongoose.Types.ObjectId(req.user._id);
+    const userId = new mongoose.Types.ObjectId(req.user._id);
 
     const getVideoComments = await Comment.aggregate([
         {
@@ -48,6 +48,25 @@ export const getVideoComments = asyncHandler(async (req, res) => {
             }
         },
         {
+            $lookup: {
+            from: "likes",
+            let: { commentId: "$_id" },
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {
+                            $and: [
+                                { $eq: ["$comment", "$$commentId"] },
+                                { $eq: ["$likedBy", userId] }
+                            ]
+                        }
+                    }
+                }
+            ],
+            as: "userLike"
+            }
+        },
+        {
             $addFields: {
                 owner: {
                     $first: "$owner"
@@ -56,14 +75,11 @@ export const getVideoComments = asyncHandler(async (req, res) => {
                     $eq: ["$owner._id", userId]
                 },
                 isLiked: {
-                    $cond: {
-                        if: { $in: [userId, "$likes"] },
-                        then: true,
-                        else: false
-                    }
+                    $gt: [{ $size: "$userLike" }, 0] 
                 }
             }
         },
+        { $project: { userLike: 0 } },
         {
             $facet: {
                 comments: [
@@ -96,7 +112,8 @@ export const getVideoComments = asyncHandler(async (req, res) => {
 });
 
 export const addComment = asyncHandler(async (req, res) => {
-    const { content, videoId } = req.body;
+    const { content } = req.body;
+    const { videoId } = req.params;
     if(!content || !videoId) throw new ApiError(400, "Comment content and VideoId are required");
 
     const SanitizedComment = content.trim();
@@ -129,14 +146,14 @@ export const addComment = asyncHandler(async (req, res) => {
 
     return res.status(201)
     .json(
-        new ApiResponse(201, {video}, "Comment added Successfully")
-        // new ApiResponse(201, ResponseComment, "Comment added Successfully")
+        // new ApiResponse(201, {video}, "Comment added Successfully")
+        new ApiResponse(201, {ResponseComment}, "Comment added Successfully")
     );
 });
 
 export const updateComment = asyncHandler(async (req, res) => {
-    const { commentId } = req.params;
-    const { content, videoId } = req.body;
+    const { commentId, videoId } = req.params;
+    const { content } = req.body;
     if(!content || !videoId) throw new ApiError(400, "Comment content and videoId are required");
 
     const SanitizedComment = content.trim();
@@ -145,18 +162,18 @@ export const updateComment = asyncHandler(async (req, res) => {
     const video = await Video.findById(videoId );
     if(!video) throw new ApiError(404, "Video not found");
 
-    const findComment = await Comment.findById(commentId);
-    if(!findComment) throw new ApiError(404, "Comment not found");
+    const comment = await Comment.findById(commentId);
+    if(!comment) throw new ApiError(404, "Comment not found");
 
-    if(Comment.video.toString() !== videoId)
+    if(comment.video.toString() !== videoId)
         throw new ApiError(400, "Comment does not belongs to this video");
 
-    if(Comment.owner.toString() !== req.user._id.toString())
+    if(comment.owner.toString() !== req.user._id.toString())
         throw new ApiError(403, "You are not allowed to edit this comment")
 
-    Comment.content = SanitizedComment;
+    comment.content = SanitizedComment;
 
-    await Comment.save({ validateBeforeSave: false });
+    await comment.save({ validateBeforeSave: false });
 
     return res.status(200)
     .json(
@@ -165,8 +182,7 @@ export const updateComment = asyncHandler(async (req, res) => {
 });
 
 export const deleteComment = asyncHandler(async (req, res) => {
-    const { commentId } = req.params;
-    const { videoId } = req.body;
+    const { commentId, videoId } = req.params;
 
     if(!commentId || !videoId) throw new ApiError(400, "CommentId and videoId are required");
 
@@ -176,15 +192,15 @@ export const deleteComment = asyncHandler(async (req, res) => {
     const comment = await Comment.findById(commentId);
     if(!comment) throw new ApiError(404, "Comment not found");
 
-    if(Comment.video.toString() !== videoId)
+    if(comment.video.toString() !== videoId)
         throw new ApiError(400, "Comment does not belongs to this video");
 
-    if(Comment.owner.toString() !== req.user._id.toString())
+    if(comment.owner.toString() !== req.user._id.toString())
         throw new ApiError(403, "You are not allowed to delete the comment");
 
-    await Comment.findByIdAndDelete(commentId);
+    await comment.deleteOne();
 
-    if(video.commentcount > 0){
+    if(video.commentCount > 0){
         video.commentCount -= 1;
         await video.save({ validateBeforeSave: false });
     }
