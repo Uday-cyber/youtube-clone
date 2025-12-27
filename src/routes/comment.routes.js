@@ -5,7 +5,7 @@ import { addComment, deleteComment, getVideoComments, updateComment } from "../c
 
 const commentRouter = express.Router();
 
-commentRouter.route("/:videoId/comments")
+commentRouter.route("/video/:videoId/comments")
 .get(
     verifyJWT,
     getVideoComments
@@ -15,7 +15,7 @@ commentRouter.route("/:videoId/comments")
     addComment
 )
 
-commentRouter.route("/:videoId/comments/:commentId")
+commentRouter.route("/video/:videoId/comments/:commentId")
 .patch(
     verifyJWT,
     updateComment

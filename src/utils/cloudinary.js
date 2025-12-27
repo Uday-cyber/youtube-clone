@@ -26,7 +26,7 @@ export const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-export const deleteFromCloudinary = async (public_id) => {
+export const deleteImageFromCloudinary = async (public_id) => {
     try {
         if(!public_id) throw new ApiError(400, "Could not find public id to delete from cloudinary");
     
@@ -34,6 +34,18 @@ export const deleteFromCloudinary = async (public_id) => {
 
         return response;
     } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteVideoFromCloudinary = async (public_id) => {
+    try {
+        if(!public_id) throw new ApiError(400, "Could not find public id to delete from coudinary");
+
+        const response = await cloudinary.uploader.destroy(public_id, { resource_type: "video", invalidate: true });
+
+        return response;
+    } catch( error ) {
         throw error;
     }
 }

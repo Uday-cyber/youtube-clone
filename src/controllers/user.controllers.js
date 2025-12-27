@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import asyncHanlder from "../utils/asyncHandler.js";
 import { User } from "../models/user.models.js";
 import ApiError from "../utils/ApiError.js";
-import {uploadOnCloudinary, deleteFromCloudinary} from "../utils/cloudinary.js";
+import {uploadOnCloudinary, deleteImageFromCloudinary} from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 
@@ -31,7 +31,7 @@ const deleteFromCloudinaryAndRollBack = async (user, avatarLocalPath) => {
 
         // console.log("User Avatar: ", user.avatar);
         
-        const oldAvatar = await deleteFromCloudinary(user.avatar.public_id);
+        const oldAvatar = await deleteImageFromCloudinary(user.avatar.public_id);
         if(oldAvatar?.result !== "ok") throw new ApiError(500, "Error while deleting the old avatar from cloud");
 
         return {
@@ -40,7 +40,7 @@ const deleteFromCloudinaryAndRollBack = async (user, avatarLocalPath) => {
         };
     } catch (error) {
         if (newAvatar?.public_id) {
-            await deleteFromCloudinary(newAvatar.public_id);
+            await deleteImageFromCloudinary(newAvatar.public_id);
         }
         throw error;
     }
